@@ -11,22 +11,18 @@ class Category {
 List<Category> categoryList = [
   Category(
     name: 'Temperatura apa',
-    thumbnail: 'assets/icons/laptop.jpg',
+    thumbnail: 'assets/icons/w.jpeg',
   ),
   Category(
     name: 'Nivel apa',
-    thumbnail: 'assets/icons/accounting.jpg',
+    thumbnail: 'assets/icons/level.png',
   ),
   Category(
     name: 'Presiune ulei',
-    thumbnail: 'assets/icons/photography.jpg',
-  ),
-  Category(
-    name: 'Rotatii/minut',
-    thumbnail: 'assets/icons/design.jpg',
+    thumbnail: 'assets/icons/p.jpg',
   ),
   Category(
     name: 'Nivel combustibil',
-    thumbnail: 'assets/icons/design.jpg',
+    thumbnail: 'assets/icons/comb.jpeg',
   ),
 ];

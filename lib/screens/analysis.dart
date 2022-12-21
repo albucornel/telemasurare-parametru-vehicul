@@ -56,12 +56,12 @@ class Analysis extends StatelessWidget {
                     padding: const EdgeInsets.all(2.0),
                     child: Column(
                       children: <Widget>[
-                        Text(
-                          "Sales of a company over the years",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold
-                          ),
-                        ),
+                        // Text(
+                        //   "Sales of a company over the years",
+                        //   style: TextStyle(
+                        //       fontWeight: FontWeight.bold
+                        //   ),
+                        // ),
                         SizedBox(
                           height: 5,
                         ),

@@ -5,12 +5,22 @@ import 'package:TractorMonitoring/widgets/circle_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../service/ParametersService.dart';
+
 class FeaturedScreen extends StatefulWidget {
   const FeaturedScreen({Key? key}) : super(key: key);
 
   @override
   _FeaturedScreenState createState() => _FeaturedScreenState();
 }
+
+Future<void> test() async {
+  var result= await ParametersProviderApi().fetchWaterTemp();
+
+  print("RESUUUUUUUUUULTTTTTTTTT");
+  print(result);
+}
+
 
 class _FeaturedScreenState extends State<FeaturedScreen> {
   @override
@@ -113,7 +123,7 @@ class CategoryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Align(
-              alignment: Alignment.topRight,
+              alignment: Alignment.center,
               child: Image.asset(
                 category.thumbnail,
                 height: kCategoryCardImageSize,
@@ -138,8 +148,8 @@ class AppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-      height: 170,
+      padding: const EdgeInsets.only(top: 80, left: 20, right: 20),
+      height: 220,
       width: double.infinity,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
@@ -151,8 +161,8 @@ class AppBar extends StatelessWidget {
           end: Alignment.bottomRight,
           stops: [0.1, 0.5],
           colors: [
-            Color(0xff886ff2),
-            Color(0xff6849ef),
+            Color(0xff64C377),
+            Color(0xff50B264),
           ],
         ),
       ),
@@ -166,13 +176,19 @@ class AppBar extends StatelessWidget {
                 "Telemasurare\nparametri vehicul",
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              CircleButton(
-                icon: Icons.notifications,
+              ElevatedButton(
+                child: Text(
+                  "Test",
+                  textScaleFactor: 1.5,
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.white,
+                  onPrimary: Colors.black,
+                  elevation: 5,
+                  shadowColor: Colors.black,
+                ),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => FeaturedScreen()),
-                  );
+                  test();
                 },
               ),
             ],
