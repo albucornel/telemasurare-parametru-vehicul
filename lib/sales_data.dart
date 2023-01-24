@@ -1,7 +1,7 @@
 
 class SalesData {
-  final int year;
-  final int sales;
+  final double year;
+  final double sales;
 
   SalesData(this.year, this.sales);
 }

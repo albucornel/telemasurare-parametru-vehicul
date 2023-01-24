@@ -1,32 +1,109 @@
+import 'dart:convert';
+
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'package:TractorMonitoring/constants/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:TractorMonitoring/screens/analysis.dart';
 import 'package:TractorMonitoring/screens/history.dart';
 
+import '../service/ParametersService.dart';
+
 class DetailsScreen extends StatefulWidget {
   String title;
+  String unit;
   DetailsScreen({
     Key? key,
     required this.title,
+    required this.unit
   }) : super(key: key);
 
   @override
-  _DetailsScreenState createState() => _DetailsScreenState(title);
+  _DetailsScreenState createState() => _DetailsScreenState(title, unit);
 }
+
+
 
 class _DetailsScreenState extends State<DetailsScreen> {
   int _selectedTag = 0;
-String title;
-
-  _DetailsScreenState(this.title);
-  void changeTab(int index) {
-    setState(() {
-      _selectedTag = index;
-
+  String title;
+  String unit;
+  bool _isLoading = true;
+  List<Parameters> paramList =[];
+  late Timer _timer;
+  final int maxDataPoints = 10;
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+      _getDataFromMySQL();
     });
   }
 
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+  _DetailsScreenState(this.title,this.unit);
+  void changeTab(int index) {
+    setState(() {
+      _selectedTag = index;
+    });
+  }
+
+  Future<List<Parameters>> _getDataFromMySQL() async {
+    var url = 'https://telemasurare1.000webhostapp.com/getData.php';
+    var response =await http.post(Uri.parse(url));
+    var jsonData = json.decode(response.body);
+    this.paramList.clear();
+
+    switch(widget.title) {
+      case "Temperatura apa" :
+        for (var parameters in jsonData) {
+          paramList.add(Parameters(log_time: parameters['log_time'],
+              temp_apa: double.parse(parameters['temp_apa'])));
+        }
+        break;
+      case "Nivel apa" :
+        for (var parameters in jsonData) {
+          paramList.add(Parameters(log_time: parameters['log_time'],
+              temp_apa: double.parse(parameters['nivel_apa'])));
+        }
+        break;
+      case "Presiune ulei" :
+        for (var parameters in jsonData) {
+          paramList.add(Parameters(log_time: parameters['log_time'],
+              temp_apa: double.parse(parameters['presiune_ulei'])));
+        }
+        break;
+      case "Nivel combustibil" :
+        for (var parameters in jsonData) {
+          paramList.add(Parameters(log_time: parameters['log_time'],
+              temp_apa: double.parse(parameters['niv_combustibil'])));
+        }
+        break;
+       default :
+         print("EROARE SELECTARE CATEGORIE");
+        break;
+  }
+    paramList.sublist(paramList.length-20, paramList.length);
+    print(paramList);
+    setState(() {
+      _isLoading = false;
+    });
+
+    return paramList;
+  }
+  Widget _buildLoadingIndicator() {
+    return Container(
+        alignment: Alignment.center,
+      padding: EdgeInsets.only(top: 200),
+      child: CircularProgressIndicator(),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -76,7 +153,8 @@ String title;
                   index: _selectedTag,
                   changeTab: changeTab,
                 ),
-                _selectedTag == 0 ? Analysis() : const Expanded(child:Histoty()),
+
+                  _selectedTag == 0 && !_isLoading ? Analysis(paramList: paramList, unit: widget.unit,) : (_selectedTag == 0 || _selectedTag == 1) && _isLoading ? _buildLoadingIndicator() : _selectedTag == 1 && !_isLoading ? History(paramList: paramList, unit: widget.unit,) : _buildLoadingIndicator(),
               ],
             ),
           ),
@@ -178,6 +256,35 @@ class CustomIconButton extends StatelessWidget {
           ), //BoxShadow
         ],
       ),
+    );
+  }
+}
+class Parameters {
+  int id;
+  double temp_apa;
+  double nivel_apa;
+  double presiune_ilei;
+  double niv_combustibil;
+  String log_time;
+
+
+  Parameters({
+     this.id = 0,
+     this.temp_apa = 0,
+     this.nivel_apa = 0,
+     this.presiune_ilei = 0,
+     this.niv_combustibil = 0,
+     this.log_time = "no time",
+
+  });
+  factory Parameters.fromJson(Map<String, dynamic> json) {
+    return Parameters(
+      id: json['id'],
+      temp_apa: json['temp_apa'],
+      nivel_apa: json['nivel_apa'],
+      presiune_ilei: json['presiune_ilei'],
+      niv_combustibil: json['niv_combustibil'],
+      log_time: json['log_time'],
     );
   }
 }

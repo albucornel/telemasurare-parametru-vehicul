@@ -5,6 +5,8 @@ import 'package:TractorMonitoring/widgets/circle_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../service/ParametersService.dart';
+
 class FeaturedScreen extends StatefulWidget {
   const FeaturedScreen({Key? key}) : super(key: key);
 
@@ -13,6 +15,7 @@ class FeaturedScreen extends StatefulWidget {
 }
 
 class _FeaturedScreenState extends State<FeaturedScreen> {
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -79,12 +82,21 @@ class Body extends StatelessWidget {
   }
 }
 
-class CategoryCard extends StatelessWidget {
+class CategoryCard extends StatefulWidget {
   final Category category;
   const CategoryCard({
     Key? key,
     required this.category,
   }) : super(key: key);
+  @override
+  _CategoryCardState createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<CategoryCard> {
+
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,40 +105,41 @@ class CategoryCard extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => DetailsScreen(title:category.name),
+          builder: (context) => DetailsScreen(title:widget.category.name, unit: widget.category.unit,)
         ),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(.1),
-              blurRadius: 4.0,
-              spreadRadius: .05,
-            ), //BoxShadow
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Image.asset(
-                category.thumbnail,
-                height: kCategoryCardImageSize,
+        child:  Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(.1),
+                blurRadius: 4.0,
+                spreadRadius: .05,
+              ), //BoxShadow
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.center,
+                child: Image.asset(
+                  widget.category.thumbnail,
+                  height: kCategoryCardImageSize,
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Text(category.name),
-          ],
+              const SizedBox(
+                height: 10,
+              ),
+              Text(widget.category.name),
+            ],
+          ),
         ),
-      ),
     );
+
   }
 }
 
@@ -138,8 +151,8 @@ class AppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-      height: 170,
+      padding: const EdgeInsets.only(top: 80, left: 20, right: 20),
+      height: 220,
       width: double.infinity,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
@@ -151,8 +164,8 @@ class AppBar extends StatelessWidget {
           end: Alignment.bottomRight,
           stops: [0.1, 0.5],
           colors: [
-            Color(0xff886ff2),
-            Color(0xff6849ef),
+            Color(0xff64C377),
+            Color(0xff50B264),
           ],
         ),
       ),
@@ -166,15 +179,21 @@ class AppBar extends StatelessWidget {
                 "Telemasurare\nparametri vehicul",
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              CircleButton(
-                icon: Icons.notifications,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => FeaturedScreen()),
-                  );
-                },
-              ),
+              // ElevatedButton(
+              //   child: Text(
+              //     "Test",
+              //     textScaleFactor: 1.5,
+              //   ),
+              //   style: ElevatedButton.styleFrom(
+              //     primary: Colors.white,
+              //     onPrimary: Colors.black,
+              //     elevation: 5,
+              //     shadowColor: Colors.black,
+              //   ),
+              //   onPressed: () {
+              //     // waterTemp();
+              //   },
+              // ),
             ],
           ),
 
