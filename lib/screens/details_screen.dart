@@ -1,109 +1,129 @@
-import 'dart:convert';
-
-import 'package:charts_flutter/flutter.dart' as charts;
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'package:TractorMonitoring/constants/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:TractorMonitoring/screens/analysis.dart';
 import 'package:TractorMonitoring/screens/history.dart';
 
-import '../service/ParametersService.dart';
+import 'featuerd_screen.dart';
 
 class DetailsScreen extends StatefulWidget {
+
   String title;
   String unit;
+  bool isLoading;
+  List<Parameters> paramList;
+
   DetailsScreen({
     Key? key,
     required this.title,
-    required this.unit
+    required this.unit,
+    required this.paramList,
+    required this.isLoading,
   }) : super(key: key);
 
   @override
-  _DetailsScreenState createState() => _DetailsScreenState(title, unit);
+  _DetailsScreenState createState() => _DetailsScreenState(title, unit, paramList, isLoading);
 }
-
-
-
 class _DetailsScreenState extends State<DetailsScreen> {
   int _selectedTag = 0;
-  String title;
-  String unit;
-  bool _isLoading = true;
-  List<Parameters> paramList =[];
+  String title = "";
+  String unit = "";
+  bool isLoading = true;
+  List<Parameters> specParamList = [];
+
+
+  _DetailsScreenState(this.title, this.unit, this.specParamList, this.isLoading);
+
   late Timer _timer;
-  final int maxDataPoints = 10;
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(Duration(seconds: 30), (timer) {
-      _getDataFromMySQL();
+      // this.specParamList.clear();
+      setState(() {
+        this.specParamList = _getDataFromMySQL();
+
+      });
+
     });
   }
-
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
-  _DetailsScreenState(this.title,this.unit);
+
   void changeTab(int index) {
     setState(() {
       _selectedTag = index;
     });
   }
 
-  Future<List<Parameters>> _getDataFromMySQL() async {
-    var url = 'https://telemasurare1.000webhostapp.com/getData.php';
-    var response =await http.post(Uri.parse(url));
-    var jsonData = json.decode(response.body);
-    this.paramList.clear();
 
-    switch(widget.title) {
+  List<Parameters> _getDataFromMySQL()  {
+    List<Parameters> tempParamList = [];
+
+    switch (widget.title) {
       case "Temperatura apa" :
-        for (var parameters in jsonData) {
-          paramList.add(Parameters(log_time: parameters['log_time'],
-              temp_apa: double.parse(parameters['temp_apa'])));
+        print("TEMPERATURA APA");
+        // specParamList.clear();
+        for (var parameters in widget.paramList) {
+          print(parameters.temp_apa);
+          tempParamList.add(Parameters(log_time: parameters.log_time,
+              temp_apa: parameters.temp_apa));
         }
+
         break;
       case "Nivel apa" :
-        for (var parameters in jsonData) {
-          paramList.add(Parameters(log_time: parameters['log_time'],
-              temp_apa: double.parse(parameters['nivel_apa'])));
+        print("NIVEL APA");
+        for (var parameters in widget.paramList) {
+          print(parameters.nivel_apa);
+          tempParamList.add(Parameters(log_time: parameters.log_time,
+              nivel_apa: parameters.nivel_apa));
         }
+
         break;
       case "Presiune ulei" :
-        for (var parameters in jsonData) {
-          paramList.add(Parameters(log_time: parameters['log_time'],
-              temp_apa: double.parse(parameters['presiune_ulei'])));
+        print("PRESIUNE ULEI");
+        specParamList.clear();
+        for (var parameters in widget.paramList) {
+          tempParamList.add(Parameters(log_time: parameters.log_time,
+              presiune_ulei: parameters.presiune_ulei));
         }
+
         break;
       case "Nivel combustibil" :
-        for (var parameters in jsonData) {
-          paramList.add(Parameters(log_time: parameters['log_time'],
-              temp_apa: double.parse(parameters['niv_combustibil'])));
+        print("NIVEL COMBUSTIBIL");
+        // specParamList.clear();
+        for (var parameters in widget.paramList) {
+          tempParamList.add(Parameters(log_time: parameters.log_time,
+              niv_combustibil: parameters.niv_combustibil));
         }
+
         break;
-       default :
-         print("EROARE SELECTARE CATEGORIE");
+      default :
+        print("EROARE SELECTARE CATEGORIE");
         break;
-  }
-    paramList.sublist(paramList.length-20, paramList.length);
-    print(paramList);
+    }
+    // specParamList.sublist(specParamList.length - 50, specParamList.length);
+    print("LAAAAAAAAAAAA");
+    print(specParamList.length);
     setState(() {
-      _isLoading = false;
+      isLoading = false;
     });
 
-    return paramList;
+    return tempParamList;
   }
+
   Widget _buildLoadingIndicator() {
     return Container(
-        alignment: Alignment.center,
+      alignment: Alignment.center,
       padding: EdgeInsets.only(top: 200),
       child: CircularProgressIndicator(),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -122,7 +142,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       Align(
                         child: Text(
                           this.title,
-                          style: Theme.of(context).textTheme.displayMedium,
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .displayMedium,
                         ),
                       ),
                       Positioned(
@@ -154,7 +177,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   changeTab: changeTab,
                 ),
 
-                  _selectedTag == 0 && !_isLoading ? Analysis(paramList: paramList, unit: widget.unit,) : (_selectedTag == 0 || _selectedTag == 1) && _isLoading ? _buildLoadingIndicator() : _selectedTag == 1 && !_isLoading ? History(paramList: paramList, unit: widget.unit,) : _buildLoadingIndicator(),
+                _selectedTag == 0 && !isLoading ? Analysis(
+                  paramList: specParamList, unit: widget.unit,) : (_selectedTag ==
+                    0 || _selectedTag == 1) && isLoading
+                    ? _buildLoadingIndicator()
+                    : _selectedTag == 1 && !isLoading
+                    ? History(paramList: specParamList, unit: widget.unit,)
+                    : _buildLoadingIndicator(),
               ],
             ),
           ),
@@ -175,7 +204,7 @@ class CustomTabView extends StatefulWidget {
 }
 
 class _CustomTabViewState extends State<CustomTabView> {
-  final List<String> _tags = ["Analiza", "Istoric"];
+  final List<String> _tags = ["Analiză", "Istoric"];
 
   Widget _buildTags(int index) {
     return GestureDetector(
@@ -259,32 +288,4 @@ class CustomIconButton extends StatelessWidget {
     );
   }
 }
-class Parameters {
-  int id;
-  double temp_apa;
-  double nivel_apa;
-  double presiune_ilei;
-  double niv_combustibil;
-  String log_time;
 
-
-  Parameters({
-     this.id = 0,
-     this.temp_apa = 0,
-     this.nivel_apa = 0,
-     this.presiune_ilei = 0,
-     this.niv_combustibil = 0,
-     this.log_time = "no time",
-
-  });
-  factory Parameters.fromJson(Map<String, dynamic> json) {
-    return Parameters(
-      id: json['id'],
-      temp_apa: json['temp_apa'],
-      nivel_apa: json['nivel_apa'],
-      presiune_ilei: json['presiune_ilei'],
-      niv_combustibil: json['niv_combustibil'],
-      log_time: json['log_time'],
-    );
-  }
-}

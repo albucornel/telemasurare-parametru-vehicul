@@ -12,13 +12,13 @@ class Category {
 
 List<Category> categoryList = [
   Category(
-    name: 'Temperatura apa',
+    name: 'Temperatură apă',
     unit: '°C',
     thumbnail: 'assets/icons/w.jpeg',
   ),
   Category(
-    name: 'Nivel apa',
-    unit: 'L',
+    name: 'Nivel apă',
+    unit: 'l',
     thumbnail: 'assets/icons/level.png',
   ),
   Category(

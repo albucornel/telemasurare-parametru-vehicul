@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:TractorMonitoring/constants/size.dart';
 import 'package:TractorMonitoring/models/category.dart';
 import 'package:TractorMonitoring/screens/details_screen.dart';
@@ -36,6 +39,11 @@ class _FeaturedScreenState extends State<FeaturedScreen> {
 
 class Body extends StatelessWidget {
   const Body({Key? key}) : super(key: key);
+
+  Future<void> _deleteData() async {
+    var url = 'https://telemasurare1.000webhostapp.com/deleteData.php';
+    await http.post(Uri.parse(url));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +84,61 @@ class Body extends StatelessWidget {
               },
               itemCount: categoryList.length,
             ),
+              ElevatedButton(
+                child: Text(
+                  "Reset",
+                  textScaleFactor: 1.5,
+                ),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.white,
+                  onPrimary: Colors.black,
+                  elevation: 5,
+                  shadowColor: Colors.black,
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Sunteți sigur că vreți să resetați datele?", style: TextStyle(color: Colors.black),),
+                        actions: <Widget>[
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.white,
+                              onPrimary: Colors.black,
+                              elevation: 5,
+                              shadowColor: Colors.black,
+                            ),
+                            child: Text("Da", style: TextStyle(color: Colors.black),),
+                            onPressed: () {
+                              _deleteData();
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          SizedBox(width: 65,
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.white,
+                              onPrimary: Colors.black,
+                              elevation: 5,
+                              shadowColor: Colors.black,
+                            ),
+                            child: Text("Nu", style: TextStyle(color: Colors.black)),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          SizedBox(width: 20,
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
           ],
+
         )
     );
   }
@@ -84,9 +146,10 @@ class Body extends StatelessWidget {
 
 class CategoryCard extends StatefulWidget {
   final Category category;
-  const CategoryCard({
+  CategoryCard({
     Key? key,
     required this.category,
+
   }) : super(key: key);
   @override
   _CategoryCardState createState() => _CategoryCardState();
@@ -94,18 +157,61 @@ class CategoryCard extends StatefulWidget {
 
 class _CategoryCardState extends State<CategoryCard> {
 
+  bool isLoading = true;
+  List<Parameters> paramList =[];
+  late Timer _timer;
+  final int maxDataPoints = 10;
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+      _getDataFromMySQL();
+    });
+  }
+
+  @override
   void dispose() {
+    _timer.cancel();
     super.dispose();
+  }
+
+  Future<List<Parameters>> _getDataFromMySQL() async {
+    var url = 'https://telemasurare1.000webhostapp.com/getData.php';
+    var response =await http.post(Uri.parse(url));
+    var jsonData = json.decode(response.body);
+    this.paramList.clear();
+
+    for (var parameters in jsonData) {
+      paramList.add(Parameters(log_time: parameters['log_time'],
+          temp_apa: double.parse(parameters['temp_apa']),
+          nivel_apa: double.parse(parameters['nivel_apa']),
+          niv_combustibil: double.parse(parameters['niv_combustibil']),
+          presiune_ulei: double.parse(parameters['presiune_ulei'])
+      ));
+    }
+    setState(() {
+      isLoading = false;
+    });
+    return paramList;
+  }
+  Widget _buildLoadingIndicator() {
+    return Container(
+      alignment: Alignment.center,
+      width: 10,
+      height: 10,
+      // padding: EdgeInsets.only(top: 200),
+      child: CircularProgressIndicator(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return !isLoading? GestureDetector(
 
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => DetailsScreen(title:widget.category.name, unit: widget.category.unit,)
+          builder: (context) => DetailsScreen(title:widget.category.name, unit: widget.category.unit, paramList: paramList, isLoading: isLoading)
         ),
       ),
         child:  Container(
@@ -136,8 +242,44 @@ class _CategoryCardState extends State<CategoryCard> {
               ),
               Text(widget.category.name),
             ],
+
           ),
+
         ),
+    ) : GestureDetector(
+
+      child:  Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.1),
+              blurRadius: 4.0,
+              spreadRadius: .05,
+            ), //BoxShadow
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.center,
+              child: Image.asset(
+                widget.category.thumbnail,
+                height: kCategoryCardImageSize,
+              ),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            _buildLoadingIndicator(),
+            Text(widget.category.name),
+
+        ],
+        ),
+      ),
     );
 
   }
@@ -179,26 +321,40 @@ class AppBar extends StatelessWidget {
                 "Telemasurare\nparametri vehicul",
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              // ElevatedButton(
-              //   child: Text(
-              //     "Test",
-              //     textScaleFactor: 1.5,
-              //   ),
-              //   style: ElevatedButton.styleFrom(
-              //     primary: Colors.white,
-              //     onPrimary: Colors.black,
-              //     elevation: 5,
-              //     shadowColor: Colors.black,
-              //   ),
-              //   onPressed: () {
-              //     // waterTemp();
-              //   },
-              // ),
             ],
           ),
 
         ],
       ),
+    );
+  }
+}
+class Parameters {
+  int id;
+  double temp_apa;
+  double nivel_apa;
+  double presiune_ulei;
+  double niv_combustibil;
+  String log_time;
+
+
+  Parameters({
+    this.id = 0,
+    this.temp_apa = 0,
+    this.nivel_apa = 0,
+    this.presiune_ulei = 0,
+    this.niv_combustibil = 0,
+    this.log_time = "no time",
+
+  });
+  factory Parameters.fromJson(Map<String, dynamic> json) {
+    return Parameters(
+      id: json['id'],
+      temp_apa: json['temp_apa'],
+      nivel_apa: json['nivel_apa'],
+      presiune_ulei: json['presiune_ulei'],
+      niv_combustibil: json['niv_combustibil'],
+      log_time: json['log_time'],
     );
   }
 }

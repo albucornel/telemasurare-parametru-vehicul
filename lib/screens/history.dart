@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'details_screen.dart';
+import 'featuerd_screen.dart';
 
 
 class History extends StatefulWidget {
@@ -60,7 +61,7 @@ class _HistoryState extends State<History> {
                           children: [
                             DataTable(
                               columns: [
-                                DataColumn(label: Text("Value (" + widget.unit + ")",style: TextStyle(fontWeight: FontWeight.bold)), numeric: true,),
+                                DataColumn(label: Text("Valoare (" + widget.unit + ")",style: TextStyle(fontWeight: FontWeight.bold)), numeric: true,),
                                 DataColumn(label: Text("Data & Ora",style: TextStyle(fontWeight: FontWeight.bold)), numeric: false,),
                               ], rows: [],
                             ),
@@ -77,9 +78,9 @@ class _HistoryState extends State<History> {
                                     rows: [
                                       DataRow(
                                           cells: [
-                                            DataCell(Text('${data.temp_apa}', textAlign: TextAlign.center, maxLines: 2,
+                                            DataCell(Text(widget.unit=='°C'? '${data.temp_apa}' : widget.unit=='Bar'? '${data.presiune_ulei} ': widget.unit=='L'? '${data.niv_combustibil}': '${data.nivel_apa}', textAlign: TextAlign.center, maxLines: 2,
                                               style: TextStyle(fontSize: 16),)),
-                                            DataCell( Text('${data.log_time}', textAlign: TextAlign.center, maxLines: 2,softWrap: true,
+                                            DataCell( Text('${data.log_time}', textAlign: TextAlign.center, maxLines: 2, softWrap: true,
 
                                               style: TextStyle(fontSize: 16),)),
                                           ]
